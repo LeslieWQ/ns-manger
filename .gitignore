@@ -5,3 +5,9 @@ dist/
 .env
 .vscode/
 .idea/
+
+# 数据库（只存在服务器本地）
+*.db
+*.sqlite
+logs/
+
