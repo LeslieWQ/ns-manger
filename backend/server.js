@@ -125,7 +125,11 @@ app.post('/api/games', (req, res) => {
 app.post('/api/buy-game', (req, res) => {
   try {
     const db = loadDB();
-    const { account_id, title, price, purchase_date, notes } = req.body;
+    const { account_id, title, amount, price, purchase_date, notes } = req.body;
+
+    // amount = 本地货币扣余额，price = 人民币价值存数据库
+    const deductAmount = amount || price || 0;
+    const savePrice = price || deductAmount;
 
     // 检查余额
     const accounts = dbAll(db, 'SELECT balance FROM accounts WHERE id = ?', [account_id]);
@@ -135,19 +139,19 @@ app.post('/api/buy-game', (req, res) => {
     }
 
     const balance = accounts[0].balance;
-    if (balance < (price || 0)) {
+    if (balance < deductAmount) {
       db.close();
-      return res.json({ success: false, message: `余额不足（余额: ¥${balance}，需要: ¥${price}）` });
+      return res.json({ success: false, message: `余额不足（余额: ¥${balance}，需要: ¥${deductAmount}）` });
     }
 
     // 添加游戏记录
     dbRun(db,
       'INSERT INTO games (account_id, title, price, purchase_date, notes) VALUES (?, ?, ?, ?, ?)',
-      [account_id, title, price || 0, purchase_date || null, notes || null]
+      [account_id, title, savePrice, purchase_date || null, notes || null]
     );
 
     // 扣余额
-    dbRun(db, 'UPDATE accounts SET balance = balance - ? WHERE id = ?', [price, account_id]);
+    dbRun(db, 'UPDATE accounts SET balance = balance - ? WHERE id = ?', [deductAmount, account_id]);
 
     saveDB(db);
     db.close();
