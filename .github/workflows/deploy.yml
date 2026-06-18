@@ -1,0 +1,20 @@
+name: 自动部署
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH 到服务器并部署
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 150.158.147.230
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/ns-manager
+            git pull origin master 2>/dev/null || git pull origin main 2>/dev/null
+            bash deploy.sh
