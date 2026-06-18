@@ -58,7 +58,7 @@ app.get('/api/accounts', (req, res) => {
     const db = loadDB();
     const accounts = dbAll(db, `
       SELECT a.*, 
-             COALESCE((SELECT SUM(g.price) FROM games g WHERE g.account_id = a.id), 0) as total_spent
+             COALESCE((SELECT SUM(r.cost) FROM recharges r WHERE r.account_id = a.id), 0) as total_spent
       FROM accounts a 
       ORDER BY a.id DESC
     `);
